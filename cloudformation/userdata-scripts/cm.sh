@@ -7,19 +7,17 @@ curl -L "https://packages.chef.io/stable/el/6/chefdk-$DKVERSION.el6.x86_64.rpm" 
 
 mkdir /etc/chef
 chef-server-ctl reconfigure
-chef-server-ctl user-create rean-demo-user Rean Demo dextermarkley@gmail.com '{{parameters['ChefPassword']}}' --filename /etc/chef/reandemouser.pem
-chef-server-ctl org-create rean-demo-org 'Rean Demo Org' --association_user rean-demo-user --filename /etc/chef/validation.pem
+chef-server-ctl user-create rean-demo-user Rean Demo dextermarkley@gmail.com '{{parameters['ChefPassword']}}' --filename /home/ec2-user/reandemouser.pem
+chef-server-ctl org-create rean-demo-org 'Rean Demo Org' --association_user rean-demo-user --filename /home/ec2-user/validation.pem
 
-
-
-mkdir -p ~/chef-repo/
-mkdir -p ~/chef-repo/.chef
-mkdir -p ~/chef-repo/environments/
-
-cd ~/chef-repo
+chown ec2-user /home/ec2-user/*.pem
+cd ~/
+git clone https://github.com/{{parameters['GitRepo']}}.git
+cd ~/drupal-automation-demo/chef/
+mkdir -p ~/drupal-automation-demo/chef/.chef
 hostname=$(curl 169.254.169.254/latest/meta-data/local-hostname)
 
-cat > ~/chef-repo/.chef/knife.rb << EOF
+cat > ~/drupal-automation-demo/chef/.chef/knife.rb << EOF
 current_dir = File.dirname(__FILE__)
 log_level                :info
 log_location             STDOUT
@@ -35,53 +33,11 @@ EOF
 
 knife ssl fetch --server-url https://$hostname/organizations/rean-demo-org
 
-cat > ~/chef-repo/environments/production.json << EOF
-{
-  "name": "production",
-  "description": "Environment for Production",
-  "cookbook_versions": {
-    "drupal-rean": "> 0.0.0"
-  },
-  "json_class": "Chef::Environment",
-  "chef_type": "environment",
-  "default_attributes": {},
-  "override_attributes": {}
-}
-EOF
+chmod +x ~/drupal-automation-demo/chef/sync.sh
+~/drupal-automation-demo/chef/sync.sh
 
-knife environment from file ~/chef-repo/environments/production.json
-
-cat > ~/chef-repo/environments/development.json << EOF
-{
-  "name": "development",
-  "description": "Environment for Development",
-  "cookbook_versions": {
-    "drupal-rean": "> 0.0.0"
-  },
-  "json_class": "Chef::Environment",
-  "chef_type": "environment",
-  "default_attributes": {},
-  "override_attributes": {}
-}
-EOF
-
-knife environment from file ~/chef-repo/environments/development.json
-
-cat > ~/chef-repo/sync.sh << EOF
-#!/bin/bash
-
-aws s3 sync s3://{{parameters['S3CookbookBucket']}}/cookbooks/ ~/chef-repo/cookbooks/ --region {{aws_region}}
-
-cookbook_dir=\$(readlink -f ~/chef-repo/cookbooks)
-cookbooks=\$(echo \$(find \$cookbook_dir -maxdepth 1 ! -wholename \$cookbook_dir -type d -exec echo {} \;) | tr " " "\n" |awk 'BEGIN { FS = "/"  } { print \$(NF) }')
-knife cookbook upload \$cookbooks
-EOF
-
-chmod +x ~/chef-repo/sync.sh
-~/chef-repo/sync.sh
-
-aws --region {{aws_region}} s3 cp /etc/chef/validation.pem s3://{{ref('StackBucket')}}/chef/validation.pem
-aws --region {{aws_region}} s3 cp /etc/chef/reandemouser.pem s3://{{ref('StackBucket')}}/chef/reandemouser.pem
+echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDq4uaMjMeNlXHEWimQx99oSJM6R5bpSb83nUhtMdp8d6ul8g7c5qA2I2FOYTjDryxj85NIeL9NWDd+9yAJ0FAIOyqqrWpo73eID0Cul0woVJxNBkg5DZS2RrrXAwQOTdfWv/FNujWYNyR+XU/QIAGVxsSNXEODqB9gBn/UUxwlNk13/xuI9AS+rScX71tW84Ld+Z4RpdKXaIQBGflWKSdoj/GAK4DKE3RSQrJ/Js8rSJyv6AXUlayQK1cvJ/Mez7BMAa2+d2S83sWv9ePX8jc6vWFMNKj9lsVrCZRqtTNc3UXOBlRJ2grWAahCZ1k/MhuG7RPd7Nm1vUa/wBtyt2VR drupa-automation-demo@chef' >> /home/ec2-user/.ssh/authorized_keys
+echo ' ' >> /home/ec2-user/.ssh/authorized_keys
 
 # All is well so signal success
 /opt/aws/bin/cfn-signal -e 0 -r "Server setup complete" '{{ref('WaitHandleCM')}}'

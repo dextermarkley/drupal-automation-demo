@@ -40,10 +40,8 @@ resource 'EC2SecurityGroupCMIngress443', Type: 'AWS::EC2::SecurityGroupIngress',
   IpProtocol: 'tcp', FromPort: '443', ToPort: '443', SourceSecurityGroupId: ref('EC2SecurityGroupWeb')
 }
 
-resource 'StackBucket', Type: 'AWS::S3::Bucket'
 
 resource 'InstanceCM', Type: 'AWS::EC2::Instance', Properties: {
-  IamInstanceProfile: ref('InstanceProfile'),
   ImageId: parameters['AmiId'],
   InstanceType: parameters['InstanceType'],
   KeyName: parameters['SSHKey'],
@@ -57,7 +55,6 @@ resource 'InstanceCM', Type: 'AWS::EC2::Instance', Properties: {
 }
 
 resource 'InstanceWeb', Type: 'AWS::EC2::Instance', Properties: {
-  IamInstanceProfile: ref('InstanceProfile'),
   ImageId: parameters['AmiId'],
   InstanceType: parameters['InstanceType'],
   KeyName: parameters['SSHKey'],

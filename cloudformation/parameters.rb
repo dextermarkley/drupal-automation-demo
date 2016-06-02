@@ -43,8 +43,8 @@ parameter 'AvailabilityZone',
 
 parameter 'GitRepo',
           Type: 'String',
-          Default: 'dmarkley-drupal-demo',
-          Description: 'The with the cookbooks for this rean demo.'
+          Default: 'dextermarkley/drupal-automation-demo',
+          Description: 'This is the source location for the chef cookbooks.'
 
 parameter 'MysqlRootPassword',
           Type: 'String',
