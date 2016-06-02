@@ -1,0 +1,7 @@
+.chef
+.DS_Store
+/.project
+/.settings
+.idea
+Berksfile.lock
+Gemfile.lock

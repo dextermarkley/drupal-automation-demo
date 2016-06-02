@@ -1,0 +1,9 @@
+<VirtualHost *:80>
+  ServerAdmin webmaster@localhost
+  ServerName drupal
+  DocumentRoot <%= node['drupal-demo']['www_dir'] %>
+  <Directory />
+  Options FollowSymlinks
+  AllowOverride All
+  </Directory>
+</VirtualHost>
