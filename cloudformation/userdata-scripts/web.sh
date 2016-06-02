@@ -13,10 +13,10 @@ verify_api_cert false
 log_level        :info
 log_location     "/var/log/chef-client.log"
 
-chef_server_url  "https://{{get_att('InstanceCM', 'PrivateDnsName')}}/organizations/rean-demo-org"
+chef_server_url  "https://{{get_att('InstanceCM', 'PrivateDnsName')}}/organizations/drupal-demo-org"
 environment "{{ref('Environment')}}"
 node_name  "{{aws_stack_name()}}-$INSTANCEID"
-validation_client_name "rean-demo-user"
+validation_client_name "drupal-demo-user"
 file_backup_path   "/var/chef/backup"
 file_cache_path    "/var/chef/cache"
 pid_file           "/var/chef/cache/client.pid"
@@ -54,8 +54,10 @@ EOF
 
 chmod 400 ~/.ssh/id_rsa
 
-scp -i ~/.ssh/id_rsa ec2-user@{{get_att('InstanceCM', 'PrivateDnsName')}}:/home/ec2-user/validation.pem /etc/chef/validation.pem
-while [ $? -ne 0 ]; do sleep 5 && scp -i ~/.ssh/id_rsa ec2-user@{{get_att('InstanceCM', 'PrivateDnsName')}}:/home/ec2-user/validation.pem /etc/chef/validation.pem; done
+ssh-keyscan {{get_att('InstanceCM', 'PrivateDnsName')}} >> /root/.ssh/known_hosts
+
+scp -i ~/.ssh/id_rsa ec2-user@{{get_att('InstanceCM', 'PrivateDnsName')}}:/home/ec2-user/readmed.pem /etc/chef/validation.pem
+while [ $? -ne 0 ]; do sleep 5 && scp -i ~/.ssh/id_rsa ec2-user@{{get_att('InstanceCM', 'PrivateDnsName')}}:/home/ec2-user/drupaldemouser.pem /etc/chef/validation.pem; done
 
 # Ohai hint to detect as EC2 node in VPC (on first run as opposed to second)
 mkdir -p /etc/chef/ohai/hints

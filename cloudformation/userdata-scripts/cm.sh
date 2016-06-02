@@ -7,11 +7,12 @@ curl -L "https://packages.chef.io/stable/el/6/chefdk-$DKVERSION.el6.x86_64.rpm" 
 
 mkdir /etc/chef
 chef-server-ctl reconfigure
-chef-server-ctl user-create rean-demo-user Rean Demo dextermarkley@gmail.com '{{parameters['ChefPassword']}}' --filename /home/ec2-user/reandemouser.pem
-chef-server-ctl org-create rean-demo-org 'Rean Demo Org' --association_user rean-demo-user --filename /home/ec2-user/validation.pem
+chef-server-ctl user-create drupal-demo-user Drupal Demo dextermarkley@gmail.com '{{parameters['ChefPassword']}}' --filename /home/ec2-user/drupaldemouser.pem
+chef-server-ctl org-create drupal-demo-org 'Drupal Demo Org' --association_user drupal-demo-user --filename /home/ec2-user/validation.pem
 
 chown ec2-user /home/ec2-user/*.pem
 cd ~/
+yum install git -y
 git clone https://github.com/{{parameters['GitRepo']}}.git
 cd ~/drupal-automation-demo/chef/
 mkdir -p ~/drupal-automation-demo/chef/.chef
@@ -21,17 +22,17 @@ cat > ~/drupal-automation-demo/chef/.chef/knife.rb << EOF
 current_dir = File.dirname(__FILE__)
 log_level                :info
 log_location             STDOUT
-node_name                'rean-demo-user'
-client_key               "/etc/chef/reandemouser.pem"
+node_name                'drupal-demo-user'
+client_key               "/etc/chef/drupaldemouser.pem"
 validation_client_name   'rean-demo-org'
 validation_key           "/etc/chef/validation.pem"
-chef_server_url          'https://$hostname/organizations/rean-demo-org'
+chef_server_url          'https://$hostname/organizations/drupal-demo-org'
 cache_type               'BasicFile'
 cache_options( :path => "#{ENV['HOME']}/.chef/checksums" )
 cookbook_path            ["#{current_dir}/../cookbooks"]
 EOF
 
-knife ssl fetch --server-url https://$hostname/organizations/rean-demo-org
+knife ssl fetch --server-url https://$hostname/organizations/drupal-demo-org
 
 chmod +x ~/drupal-automation-demo/chef/sync.sh
 ~/drupal-automation-demo/chef/sync.sh

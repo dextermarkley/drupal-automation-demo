@@ -1,6 +1,6 @@
 {
-  "name": "development",
-  "description": "Environment for Development",
+  "name": "production",
+  "description": "Environment for Production",
   "cookbook_versions": {
     "drupal-rean": "> 0.0.0"
   },
