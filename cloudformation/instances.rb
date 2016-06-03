@@ -1,5 +1,4 @@
 
-
 cm_user_data = File.read('./userdata-scripts/cm.sh')
 web_user_data = File.read('./userdata-scripts/web.sh')
 
@@ -16,7 +15,7 @@ resource 'EC2SecurityGroupWeb', Type: 'AWS::EC2::SecurityGroup', Properties: {
     { IpProtocol: 'tcp', FromPort: '80', ToPort: '80', CidrIp: '0.0.0.0/0' },
     { IpProtocol: 'tcp', FromPort: '443', ToPort: '443', CidrIp: '0.0.0.0/0' }
   ],
-  VpcId: ref("#{parameters['Environment']}VPC#{parameters['VpcNumber']}")
+  VpcId: ref('VPC')
 }
 
 resource 'EC2SecurityGroupCM', Type: 'AWS::EC2::SecurityGroup', Properties: {
@@ -27,7 +26,7 @@ resource 'EC2SecurityGroupCM', Type: 'AWS::EC2::SecurityGroup', Properties: {
     { IpProtocol: 'tcp', FromPort: '80', ToPort: '80', CidrIp: '0.0.0.0/0' },
     { IpProtocol: 'tcp', FromPort: '443', ToPort: '443', CidrIp: '0.0.0.0/0' }
   ],
-  VpcId: ref("#{parameters['Environment']}VPC#{parameters['VpcNumber']}")
+  VpcId: ref('VPC')
 }
 
 resource 'EC2SecurityGroupCMIngress22', Type: 'AWS::EC2::SecurityGroupIngress', Properties: {
@@ -42,28 +41,28 @@ resource 'EC2SecurityGroupCMIngress443', Type: 'AWS::EC2::SecurityGroupIngress',
 
 
 resource 'InstanceCM', Type: 'AWS::EC2::Instance', Properties: {
-  ImageId: parameters['AmiId'],
-  InstanceType: parameters['InstanceType'],
-  KeyName: parameters['SSHKey'],
+  ImageId: ref('AmiId'),
+  InstanceType: ref('InstanceType'),
+  KeyName: ref('SSHKey'),
   NetworkInterfaces: [{
     AssociatePublicIpAddress: false,
     DeviceIndex: '0',
-    SubnetId: ref("app#{parameters['AvailabilityZone'].delete('-')}"),
+    SubnetId: ref('appsubnet'),
     GroupSet: [  ref('EC2SecurityGroupCM')],
   }],
   UserData: base64(interpolate(cm_user_data))
 }
 
 resource 'InstanceWeb', Type: 'AWS::EC2::Instance', Properties: {
-  ImageId: parameters['AmiId'],
-  InstanceType: parameters['InstanceType'],
-  KeyName: parameters['SSHKey'],
+  ImageId: ref('AmiId'),
+  InstanceType: ref('InstanceType'),
+  KeyName: ref('SSHKey'),
   NetworkInterfaces: [{
-                        AssociatePublicIpAddress: true,
-                        DeviceIndex: '0',
-                        SubnetId: ref("pub#{parameters['AvailabilityZone'].delete('-')}"),
-                        GroupSet: [  ref('EC2SecurityGroupWeb')],
-                      }],
+    AssociatePublicIpAddress: true,
+    DeviceIndex: '0',
+    SubnetId: ref('pubsubnet'),
+    GroupSet: [  ref('EC2SecurityGroupWeb')],
+  }],
   UserData: base64(interpolate(web_user_data))
 }
 

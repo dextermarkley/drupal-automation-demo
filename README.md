@@ -48,8 +48,6 @@ CLOUDFORMATION PARAMETERS
 
 Environment - This is the chef environment the instance will use. In this demo there is no impact when switching between dev and prd, but this servers as a place holder for further development if required.
 
-VpcNumber - This is the subnet for the VPC. The default of 16 will be suitable in most cases.
-
 AllowedIP - Use this to control who initially has access to the instance, ie '71.93.54.37/32'
 
 AmiId - This is the amazon AMI to use for the two instances. As of writing this, the latest ami 'ami-d0f506b0' should be fully functional
@@ -84,7 +82,6 @@ Usage
 
 ./drupal-demo.rb create dmarkley-drupal-demo \
 --region us-west-2 \
---capabilities CAPABILITY_IAM \
 --parameters "AllowedIP=71.93.54.37/32;SSHKey=dmarkley-drupal-demo;S3CookbookBucket=dmarkley-drupal-demo;DrupalAdminPass=letmein123drupal" \
 --disable-rollback \
 --profile my_profile

@@ -4,16 +4,15 @@ tiers = %w(
 )
 ### Mappings
 mapping 'TierToSubnetIp',
-        pub:    { ip: '0' },
-        app:    { ip: '128'  }
+        pub:    { ip: '10.16.0.0/26' },
+        app:    { ip: '10.16.128.0/26'  }
 
 mapping 'TierToRouteTable',
         pub:    { table: 'pub' },
         app:    { table: 'main'  }
 
-vpc_resource = "#{parameters['Environment']}VPC#{parameters['VpcNumber']}"
-resource vpc_resource, Type: 'AWS::EC2::VPC', Properties: {
-  CidrBlock: "10.#{parameters['VpcNumber']}.0.0/16",
+resource 'VPC', Type: 'AWS::EC2::VPC', Properties: {
+  CidrBlock: '10.16.0.0/16',
   EnableDnsSupport: true,
   EnableDnsHostnames: true,
   InstanceTenancy: 'default'
@@ -23,16 +22,16 @@ resource 'InternetGateway', Type: 'AWS::EC2::InternetGateway'
 
 resource 'InternetGatewayAttach', Type: 'AWS::EC2::VPCGatewayAttachment', Properties: {
   InternetGatewayId: ref('InternetGateway'),
-  VpcId: ref(vpc_resource)
+  VpcId: ref('VPC')
 }
 
 %w(main pub).each do |route_table|
   resource route_table.to_s, Type: 'AWS::EC2::RouteTable', Properties: {
-    VpcId: ref("#{parameters['Environment']}VPC#{parameters['VpcNumber']}"),
+    VpcId: ref('VPC'),
     Tags: [
-      { Key: 'Environment', Value: parameters['Environment'] },
-      { Key: 'CreatedBy', Value: ENV['USER'] },
-      { Key: 'Name', Value: "#{parameters['VpcNumber']}-#{route_table}" }
+      { Key: 'Environment', Value: ref('Environment') },
+      { Key: 'CreatedBy', Value: 'drupal-demo' },
+      { Key: 'Name', Value: 'drupal-automation-demo' }
     ]
   }
 end
@@ -53,47 +52,46 @@ resource 'NatEIP', Type: 'AWS::EC2::EIP', Properties: {
   Domain: 'vpc'
 }
 
-short_az = "#{parameters['AvailabilityZone'].delete('-')}"
 
 resource 'NatGateway', Type: 'AWS::EC2::NatGateway', Properties: {
   AllocationId: get_att('NatEIP', 'AllocationId'),
-  SubnetId: ref("pub#{short_az}")
+  SubnetId: ref('pubsubnet')
 }
 
-resource "pub#{short_az}", Type: 'AWS::EC2::Subnet', Properties: {
-  CidrBlock: "10.#{parameters['VpcNumber']}.#{find_in_map('TierToSubnetIp', 'pub', 'ip')}.0/26",
-  AvailabilityZone: parameters['AvailabilityZone'],
+resource 'pubsubnet', Type: 'AWS::EC2::Subnet', Properties: {
+  CidrBlock: find_in_map('TierToSubnetIp', 'pub', 'ip'),
+  AvailabilityZone: ref('AvailabilityZone'),
   MapPublicIpOnLaunch: true,
-  VpcId: ref("#{parameters['Environment']}VPC#{parameters['VpcNumber']}"),
+  VpcId: ref('VPC'),
   Tags: [
-    { Key: 'Environment', Value: parameters['Environment'] },
-    { Key: 'CreatedBy', Value: ENV['USER'] },
-    { Key: 'Tier', Value: 'pub' },
-   { Key: 'Name', Value: "#{parameters['VpcNumber']}-pub-#{parameters['AvailabilityZone'].delete('-')}" }
+    { Key: 'Environment', Value: ref('Environment') },
+    { Key: 'CreatedBy', Value: 'drupal-demo' },
+    { Key: 'Name', Value: join('-', 'drupal-demo', ref('AvailabilityZone')) },
+    { Key: 'Tier', Value: 'pub' }
   ]
 }
 
-resource "pub#{short_az}Association", Type: 'AWS::EC2::SubnetRouteTableAssociation', Properties: {
+resource 'PubSubnetAssociation', Type: 'AWS::EC2::SubnetRouteTableAssociation', Properties: {
   RouteTableId: ref(find_in_map('TierToRouteTable', 'pub', 'table')),
-  SubnetId: ref("pub#{short_az}")
+  SubnetId: ref('pubsubnet')
 }
 
-resource "app#{short_az}", Type: 'AWS::EC2::Subnet', Properties: {
-  CidrBlock: "10.#{parameters['VpcNumber']}.#{find_in_map('TierToSubnetIp', 'app', 'ip')}.0/26",
-  AvailabilityZone: parameters['AvailabilityZone'],
+resource 'appsubnet', Type: 'AWS::EC2::Subnet', Properties: {
+  CidrBlock: find_in_map('TierToSubnetIp', 'app', 'ip'),
+  AvailabilityZone: ref('AvailabilityZone'),
   MapPublicIpOnLaunch: false,
-  VpcId: ref("#{parameters['Environment']}VPC#{parameters['VpcNumber']}"),
+  VpcId: ref('VPC'),
   Tags: [
-    { Key: 'Environment', Value: parameters['Environment'] },
-    { Key: 'CreatedBy', Value: ENV['USER'] },
+    { Key: 'Environment', Value: ref('Environment') },
+    { Key: 'CreatedBy', Value: 'drupal-demo' },
     { Key: 'Tier', Value: 'app' },
-    { Key: 'Name', Value: "#{parameters['VpcNumber']}-app-#{parameters['AvailabilityZone'].delete('-')}" }
+    { Key: 'Name', Value: join('-', 'drupal-demo', ref('AvailabilityZone')) },
   ]
 }
 
-resource "app#{short_az}Association", Type: 'AWS::EC2::SubnetRouteTableAssociation', Properties: {
+resource 'AppSubnetAssociation', Type: 'AWS::EC2::SubnetRouteTableAssociation', Properties: {
   RouteTableId: ref(find_in_map('TierToRouteTable', 'app', 'table')),
-  SubnetId: ref("app#{short_az}")
+  SubnetId: ref('appsubnet')
 }
 
 

@@ -67,10 +67,10 @@ cat > /etc/chef/roles.json << EOF
 {
   "run_list": ["drupal-demo"],
   "cloud": {
-    "allowed_ip": "{{parameters['AllowedIP']}}",
-    "mysql_root_password": "{{parameters['MysqlRootPassword']}}",
-    "mysql_drupal_password": "{{parameters['MysqlDrupalPassword']}}",
-    "drupal_admin_pass": "{{parameters['DrupalAdminPass']}}"
+    "allowed_ip": "{{ref('AllowedIP')}}",
+    "mysql_root_password": "{{ref('MysqlRootPassword')}}",
+    "mysql_drupal_password": "{{ref('MysqlDrupalPassword')}}",
+    "drupal_admin_pass": "{{ref('DrupalAdminPass')}}"
   }
 }
 EOF

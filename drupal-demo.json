@@ -8,12 +8,7 @@
         "development",
         "production"
       ],
-      "ConstraintDescription": "development, production."
-    },
-    "VpcNumber": {
-      "Type": "String",
-      "Default": "16",
-      "Description": "The VPC Id for uniquness."
+      "ConstraintDescription": "development, production"
     },
     "AllowedIP": {
       "Type": "String",
@@ -71,10 +66,10 @@
   "Mappings": {
     "TierToSubnetIp": {
       "pub": {
-        "ip": "0"
+        "ip": "10.16.0.0/26"
       },
       "app": {
-        "ip": "128"
+        "ip": "10.16.128.0/26"
       }
     },
     "TierToRouteTable": {
@@ -87,7 +82,7 @@
     }
   },
   "Resources": {
-    "developmentVPC16": {
+    "VPC": {
       "Type": "AWS::EC2::VPC",
       "Properties": {
         "CidrBlock": "10.16.0.0/16",
@@ -106,7 +101,7 @@
           "Ref": "InternetGateway"
         },
         "VpcId": {
-          "Ref": "developmentVPC16"
+          "Ref": "VPC"
         }
       }
     },
@@ -114,20 +109,22 @@
       "Type": "AWS::EC2::RouteTable",
       "Properties": {
         "VpcId": {
-          "Ref": "developmentVPC16"
+          "Ref": "VPC"
         },
         "Tags": [
           {
             "Key": "Environment",
-            "Value": "development"
+            "Value": {
+              "Ref": "Environment"
+            }
           },
           {
             "Key": "CreatedBy",
-            "Value": "dmarkley"
+            "Value": "drupal-demo"
           },
           {
             "Key": "Name",
-            "Value": "16-main"
+            "Value": "drupal-automation-demo"
           }
         ]
       }
@@ -136,20 +133,22 @@
       "Type": "AWS::EC2::RouteTable",
       "Properties": {
         "VpcId": {
-          "Ref": "developmentVPC16"
+          "Ref": "VPC"
         },
         "Tags": [
           {
             "Key": "Environment",
-            "Value": "development"
+            "Value": {
+              "Ref": "Environment"
+            }
           },
           {
             "Key": "CreatedBy",
-            "Value": "dmarkley"
+            "Value": "drupal-demo"
           },
           {
             "Key": "Name",
-            "Value": "16-pub"
+            "Value": "drupal-automation-demo"
           }
         ]
       }
@@ -194,67 +193,85 @@
           ]
         },
         "SubnetId": {
-          "Ref": "pubuswest2a"
+          "Ref": "pubsubnet"
         }
       }
     },
-    "pubuswest2a": {
+    "pubsubnet": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
         "CidrBlock": "10.16.0.0/26",
-        "AvailabilityZone": "us-west-2a",
+        "AvailabilityZone": {
+          "Ref": "AvailabilityZone"
+        },
         "MapPublicIpOnLaunch": true,
         "VpcId": {
-          "Ref": "developmentVPC16"
+          "Ref": "VPC"
         },
         "Tags": [
           {
             "Key": "Environment",
-            "Value": "development"
+            "Value": {
+              "Ref": "Environment"
+            }
           },
           {
             "Key": "CreatedBy",
-            "Value": "dmarkley"
+            "Value": "drupal-demo"
+          },
+          {
+            "Key": "Name",
+            "Value": {
+              "Fn::Join": [
+                "-",
+                [
+                  "drupal-demo",
+                  {
+                    "Ref": "AvailabilityZone"
+                  }
+                ]
+              ]
+            }
           },
           {
             "Key": "Tier",
             "Value": "pub"
-          },
-          {
-            "Key": "Name",
-            "Value": "16-pub-uswest2a"
           }
         ]
       }
     },
-    "pubuswest2aAssociation": {
+    "PubSubnetAssociation": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
         "RouteTableId": {
           "Ref": "pub"
         },
         "SubnetId": {
-          "Ref": "pubuswest2a"
+          "Ref": "pubsubnet"
         }
       }
     },
-    "appuswest2a": {
+    "appsubnet": {
       "Type": "AWS::EC2::Subnet",
       "Properties": {
         "CidrBlock": "10.16.128.0/26",
-        "AvailabilityZone": "us-west-2a",
+        "AvailabilityZone": {
+          "Ref": "AvailabilityZone"
+        },
         "MapPublicIpOnLaunch": false,
         "VpcId": {
-          "Ref": "developmentVPC16"
+          "Ref": "VPC"
         },
         "Tags": [
           {
             "Key": "Environment",
-            "Value": "development"
+            "Value": {
+              "Ref": "Environment"
+            }
           },
           {
             "Key": "CreatedBy",
-            "Value": "dmarkley"
+            "Value": "drupal-demo"
           },
           {
             "Key": "Tier",
@@ -262,19 +279,29 @@
           },
           {
             "Key": "Name",
-            "Value": "16-app-uswest2a"
+            "Value": {
+              "Fn::Join": [
+                "-",
+                [
+                  "drupal-demo",
+                  {
+                    "Ref": "AvailabilityZone"
+                  }
+                ]
+              ]
+            }
           }
         ]
       }
     },
-    "appuswest2aAssociation": {
+    "AppSubnetAssociation": {
       "Type": "AWS::EC2::SubnetRouteTableAssociation",
       "Properties": {
         "RouteTableId": {
           "Ref": "main"
         },
         "SubnetId": {
-          "Ref": "appuswest2a"
+          "Ref": "appsubnet"
         }
       }
     },
@@ -329,7 +356,7 @@
           }
         ],
         "VpcId": {
-          "Ref": "developmentVPC16"
+          "Ref": "VPC"
         }
       }
     },
@@ -361,7 +388,7 @@
           }
         ],
         "VpcId": {
-          "Ref": "developmentVPC16"
+          "Ref": "VPC"
         }
       }
     },
@@ -396,15 +423,21 @@
     "InstanceCM": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
-        "ImageId": "ami-d0f506b0",
-        "InstanceType": "t2.small",
-        "KeyName": "your-ssh-key",
+        "ImageId": {
+          "Ref": "AmiId"
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "KeyName": {
+          "Ref": "SSHKey"
+        },
         "NetworkInterfaces": [
           {
             "AssociatePublicIpAddress": false,
             "DeviceIndex": "0",
             "SubnetId": {
-              "Ref": "appuswest2a"
+              "Ref": "appsubnet"
             },
             "GroupSet": [
               {
@@ -428,7 +461,9 @@
                 "mkdir /etc/chef\n",
                 "chef-server-ctl reconfigure\n",
                 "chef-server-ctl user-create drupal-demo-user Drupal Demo dextermarkley@gmail.com '",
-                "]Mi>ME9gJnfG+B4cUFjk",
+                {
+                  "Ref": "ChefPassword"
+                },
                 "' --filename /etc/chef/drupaldemouser.pem\n",
                 "chef-server-ctl org-create drupal-demo-org 'Drupal Demo Org' --association_user drupal-demo-user --filename /etc/chef/validation.pem\n",
                 "cp /etc/chef/*.pem /home/ec2-user/\n",
@@ -436,7 +471,9 @@
                 "cd ~/\n",
                 "yum install git -y\n",
                 "git clone https://github.com/",
-                "dextermarkley/drupal-automation-demo",
+                {
+                  "Ref": "GitRepo"
+                },
                 ".git\n",
                 "cd ~/drupal-automation-demo/chef/\n",
                 "mkdir -p ~/drupal-automation-demo/chef/.chef\n",
@@ -479,15 +516,21 @@
     "InstanceWeb": {
       "Type": "AWS::EC2::Instance",
       "Properties": {
-        "ImageId": "ami-d0f506b0",
-        "InstanceType": "t2.small",
-        "KeyName": "your-ssh-key",
+        "ImageId": {
+          "Ref": "AmiId"
+        },
+        "InstanceType": {
+          "Ref": "InstanceType"
+        },
+        "KeyName": {
+          "Ref": "SSHKey"
+        },
         "NetworkInterfaces": [
           {
             "AssociatePublicIpAddress": true,
             "DeviceIndex": "0",
             "SubnetId": {
-              "Ref": "pubuswest2a"
+              "Ref": "pubsubnet"
             },
             "GroupSet": [
               {
@@ -607,16 +650,24 @@
                 "  \"run_list\": [\"drupal-demo\"],\n",
                 "  \"cloud\": {\n",
                 "    \"allowed_ip\": \"",
-                "71.93.54.37/32",
+                {
+                  "Ref": "AllowedIP"
+                },
                 "\",\n",
                 "    \"mysql_root_password\": \"",
-                "eLaqerws0KLLJELjdKKEIL",
+                {
+                  "Ref": "MysqlRootPassword"
+                },
                 "\",\n",
                 "    \"mysql_drupal_password\": \"",
-                "aQfRwEryeqradsfvvcQERR",
+                {
+                  "Ref": "MysqlDrupalPassword"
+                },
                 "\",\n",
                 "    \"drupal_admin_pass\": \"",
-                "letmeindrupal",
+                {
+                  "Ref": "DrupalAdminPass"
+                },
                 "\"\n",
                 "  }\n",
                 "}\n",

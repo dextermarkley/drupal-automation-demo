@@ -4,12 +4,7 @@ parameter 'Environment',
           Description: 'The environment where the nodes should register',
           Type: 'String',
           AllowedValues: %w(development production),
-          ConstraintDescription: 'development, production.'
-
-parameter 'VpcNumber',
-          Type: 'String',
-          Default: '16',
-          Description: 'The VPC Id for uniquness.'
+          ConstraintDescription: 'development, production'
 
 parameter 'AllowedIP',
           Type: 'String',

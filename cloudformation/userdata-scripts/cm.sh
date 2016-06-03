@@ -7,13 +7,13 @@ curl -L "https://packages.chef.io/stable/el/6/chefdk-$DKVERSION.el6.x86_64.rpm" 
 
 mkdir /etc/chef
 chef-server-ctl reconfigure
-chef-server-ctl user-create drupal-demo-user Drupal Demo dextermarkley@gmail.com '{{parameters['ChefPassword']}}' --filename /etc/chef/drupaldemouser.pem
+chef-server-ctl user-create drupal-demo-user Drupal Demo dextermarkley@gmail.com '{{ref('ChefPassword')}}' --filename /etc/chef/drupaldemouser.pem
 chef-server-ctl org-create drupal-demo-org 'Drupal Demo Org' --association_user drupal-demo-user --filename /etc/chef/validation.pem
 cp /etc/chef/*.pem /home/ec2-user/
 chown ec2-user /home/ec2-user/*.pem
 cd ~/
 yum install git -y
-git clone https://github.com/{{parameters['GitRepo']}}.git
+git clone https://github.com/{{ref('GitRepo')}}.git
 cd ~/drupal-automation-demo/chef/
 mkdir -p ~/drupal-automation-demo/chef/.chef
 hostname=$(curl 169.254.169.254/latest/meta-data/local-hostname)
