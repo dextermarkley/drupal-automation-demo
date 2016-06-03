@@ -34,7 +34,7 @@ parameter 'ChefPassword',
 parameter 'AvailabilityZone',
           Type: 'String',
           Default: 'us-west-2a',
-          Description: 'The password to use on the chef-server.'
+          Description: 'The AZ to run the instances in.'
 
 parameter 'GitRepo',
           Type: 'String',
@@ -44,16 +44,16 @@ parameter 'GitRepo',
 parameter 'MysqlRootPassword',
           Type: 'String',
           Default: 'eLaqerws0KLLJELjdKKEIL',
-          Description: 'The password to use on the chef-server.'
+          Description: 'The password to use on the mysql root password.'
 
 parameter 'MysqlDrupalPassword',
           Type: 'String',
           Default: 'aQfRwEryeqradsfvvcQERR',
-          Description: 'The password to use on the chef-server.'
+          Description: 'The password to use for the mysql drupal user.'
 
 parameter 'DrupalAdminPass',
           Type: 'String',
           Default: 'letmeindrupal',
-          Description: 'The password to use on the chef-server.'
+          Description: 'The password to use for the drupal admin.'
 
 

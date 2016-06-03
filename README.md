@@ -1,10 +1,10 @@
 drupal-demo Cloudformation and Cookbook
 =====================
 
-This cloudformation-ruby template and chef cookbook should server as an example of a fully automated deployment of a drupal website.
+This cloudformation-ruby template and chef cookbook should serve as an example of a fully automated deployment of a drupal website.
 This package will:
 Create an AWS VPC with required NAT Gateway, Internet Gateway, subnets, and routing tables
-Create two EC2 Instances running amazon linux: a Chef server, and a instance with Drupal/Mysql
+Create two EC2 Instances running amazon linux: a Chef server, and an instance with Drupal/Mysql
 
 The Quick Way
 -------------
@@ -18,7 +18,7 @@ Execute the scripts to build what you need.
 
 Start with the create_ssh_key script. This script will create an ssh key for you to be able to log into the instances. Review required parameters before getting started.
 
-After the setup script has been run you can choose to use the generated .json to launch the cloudformation template or execute the ruby script.
+After the create_ssh script has been run you can choose to use the generated .json to launch the cloudformation template or execute the ruby script.
 
 Requirements
 ----------
