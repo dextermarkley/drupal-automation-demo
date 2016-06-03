@@ -32,7 +32,7 @@
     },
     "SSHKey": {
       "Type": "String",
-      "Default": "dmarkley-ssh",
+      "Default": "your-ssh-key",
       "Description": "The ssh key to install on the instance."
     },
     "ChefPassword": {
@@ -398,7 +398,7 @@
       "Properties": {
         "ImageId": "ami-d0f506b0",
         "InstanceType": "t2.small",
-        "KeyName": "dmarkley-ssh",
+        "KeyName": "your-ssh-key",
         "NetworkInterfaces": [
           {
             "AssociatePublicIpAddress": false,
@@ -481,7 +481,7 @@
       "Properties": {
         "ImageId": "ami-d0f506b0",
         "InstanceType": "t2.small",
-        "KeyName": "dmarkley-ssh",
+        "KeyName": "your-ssh-key",
         "NetworkInterfaces": [
           {
             "AssociatePublicIpAddress": true,

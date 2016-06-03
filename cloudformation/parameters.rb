@@ -28,7 +28,7 @@ parameter 'InstanceType',
 
 parameter 'SSHKey',
           Type: 'String',
-          Default: 'dmarkley-ssh',
+          Default: 'your-ssh-key',
           Description: 'The ssh key to install on the instance.'
 
 parameter 'ChefPassword',
