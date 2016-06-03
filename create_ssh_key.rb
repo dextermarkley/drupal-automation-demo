@@ -52,6 +52,7 @@ class MyCLI < Thor
       end
       puts "Writing #{ssh_key_file_path}"
       File.write(ssh_key_file_path, ssh_key_pem)
+      `chmod 400 #{ssh_key_file_path}`
     end
   end
 end

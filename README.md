@@ -37,7 +37,7 @@ Requirements
 Attributes / Parameters
 ----------
 
-SETUP SCRIPT PARAMETERS
+CREATE SSH KEY SCRIPT PARAMETERS
 
 ssh_key - The ssh key pair to create in AWS. This value must match Cloudformation Parameter - SSHKey
 ssh_key_store - When an ssh key pair is created it will be written to this location
