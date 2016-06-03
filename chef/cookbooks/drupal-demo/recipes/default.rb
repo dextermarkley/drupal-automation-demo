@@ -1,8 +1,12 @@
 
+# As of writing this mysql57 has issues with setting the root password. Sticking with the old for now.
+# https://github.com/chef-cookbooks/mysql/issues/410
 include_recipe 'yum-mysql-community::mysql55'
 include_recipe 'drupal-demo::mysql'
 include_recipe 'drupal-demo::apache'
 
+# This will install the latest version of drush.
+# Drush makes it easy to install drupal
 remote_file '/usr/local/bin/drush' do
   source 'http://files.drush.org/drush.phar'
   mode 0755
@@ -11,7 +15,7 @@ remote_file '/usr/local/bin/drush' do
 end
 
 execute 'drush download' do
-  command 'cd /var/www/ && /usr/local/bin/drush dl drupal-7.x --drupal-project-rename=drupal'
+  command "cd /var/www/ && /usr/local/bin/drush dl drupal-#{node['drupal-demo']['drupal_version']} --drupal-project-rename=drupal"
 end
 
 drupal_install_command = '/usr/local/bin/drush -y site-install standard'
@@ -24,6 +28,7 @@ execute 'drush install' do
   cwd node['drupal-demo']['www_dir']
 end
 
-execute 'change drupal files owenership' do
+# Drupal will complain about file permissions if this is not owned by apache
+execute 'change drupal files ownership' do
   command "chown apache #{node['drupal-demo']['www_dir']}/sites/default/files"
 end

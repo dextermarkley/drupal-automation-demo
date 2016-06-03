@@ -1,0 +1,670 @@
+{
+  "Parameters": {
+    "Environment": {
+      "Default": "development",
+      "Description": "The environment where the nodes should register",
+      "Type": "String",
+      "AllowedValues": [
+        "development",
+        "production"
+      ],
+      "ConstraintDescription": "development, production."
+    },
+    "VpcNumber": {
+      "Type": "String",
+      "Default": "16",
+      "Description": "The VPC Id for uniquness."
+    },
+    "AllowedIP": {
+      "Type": "String",
+      "Default": "71.93.54.37/32",
+      "Description": "The IP address that will have public access."
+    },
+    "AmiId": {
+      "Type": "String",
+      "Default": "ami-d0f506b0",
+      "Description": "The AMI you would like to start with."
+    },
+    "InstanceType": {
+      "Type": "String",
+      "Default": "t2.small",
+      "Description": "The size of the instances."
+    },
+    "SSHKey": {
+      "Type": "String",
+      "Default": "dmarkley-ssh",
+      "Description": "The ssh key to install on the instance."
+    },
+    "ChefPassword": {
+      "Type": "String",
+      "Default": "]Mi>ME9gJnfG+B4cUFjk",
+      "Description": "The password to use on the chef-server."
+    },
+    "AvailabilityZone": {
+      "Type": "String",
+      "Default": "us-west-2a",
+      "Description": "The password to use on the chef-server."
+    },
+    "GitRepo": {
+      "Type": "String",
+      "Default": "dextermarkley/drupal-automation-demo",
+      "Description": "This is the source location for the chef cookbooks."
+    },
+    "MysqlRootPassword": {
+      "Type": "String",
+      "Default": "eLaqerws0KLLJELjdKKEIL",
+      "Description": "The password to use on the chef-server."
+    },
+    "MysqlDrupalPassword": {
+      "Type": "String",
+      "Default": "aQfRwEryeqradsfvvcQERR",
+      "Description": "The password to use on the chef-server."
+    },
+    "DrupalAdminPass": {
+      "Type": "String",
+      "Default": "letmeindrupal",
+      "Description": "The password to use on the chef-server."
+    }
+  },
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Description": "AWS Cloudformation template for the creation a drupal demo in a VPC",
+  "Mappings": {
+    "TierToSubnetIp": {
+      "pub": {
+        "ip": "0"
+      },
+      "app": {
+        "ip": "128"
+      }
+    },
+    "TierToRouteTable": {
+      "pub": {
+        "table": "pub"
+      },
+      "app": {
+        "table": "main"
+      }
+    }
+  },
+  "Resources": {
+    "developmentVPC16": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "10.16.0.0/16",
+        "EnableDnsSupport": true,
+        "EnableDnsHostnames": true,
+        "InstanceTenancy": "default"
+      }
+    },
+    "InternetGateway": {
+      "Type": "AWS::EC2::InternetGateway"
+    },
+    "InternetGatewayAttach": {
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+      "Properties": {
+        "InternetGatewayId": {
+          "Ref": "InternetGateway"
+        },
+        "VpcId": {
+          "Ref": "developmentVPC16"
+        }
+      }
+    },
+    "main": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "developmentVPC16"
+        },
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": "development"
+          },
+          {
+            "Key": "CreatedBy",
+            "Value": "dmarkley"
+          },
+          {
+            "Key": "Name",
+            "Value": "16-main"
+          }
+        ]
+      }
+    },
+    "pub": {
+      "Type": "AWS::EC2::RouteTable",
+      "Properties": {
+        "VpcId": {
+          "Ref": "developmentVPC16"
+        },
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": "development"
+          },
+          {
+            "Key": "CreatedBy",
+            "Value": "dmarkley"
+          },
+          {
+            "Key": "Name",
+            "Value": "16-pub"
+          }
+        ]
+      }
+    },
+    "pubDefaultRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "InternetGateway"
+        },
+        "RouteTableId": {
+          "Ref": "pub"
+        }
+      }
+    },
+    "mainDefaultRoute": {
+      "Type": "AWS::EC2::Route",
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "NatGatewayId": {
+          "Ref": "NatGateway"
+        },
+        "RouteTableId": {
+          "Ref": "main"
+        }
+      }
+    },
+    "NatEIP": {
+      "Type": "AWS::EC2::EIP",
+      "Properties": {
+        "Domain": "vpc"
+      }
+    },
+    "NatGateway": {
+      "Type": "AWS::EC2::NatGateway",
+      "Properties": {
+        "AllocationId": {
+          "Fn::GetAtt": [
+            "NatEIP",
+            "AllocationId"
+          ]
+        },
+        "SubnetId": {
+          "Ref": "pubuswest2a"
+        }
+      }
+    },
+    "pubuswest2a": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": "10.16.0.0/26",
+        "AvailabilityZone": "us-west-2a",
+        "MapPublicIpOnLaunch": true,
+        "VpcId": {
+          "Ref": "developmentVPC16"
+        },
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": "development"
+          },
+          {
+            "Key": "CreatedBy",
+            "Value": "dmarkley"
+          },
+          {
+            "Key": "Tier",
+            "Value": "pub"
+          },
+          {
+            "Key": "Name",
+            "Value": "16-pub-uswest2a"
+          }
+        ]
+      }
+    },
+    "pubuswest2aAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "pub"
+        },
+        "SubnetId": {
+          "Ref": "pubuswest2a"
+        }
+      }
+    },
+    "appuswest2a": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "CidrBlock": "10.16.128.0/26",
+        "AvailabilityZone": "us-west-2a",
+        "MapPublicIpOnLaunch": false,
+        "VpcId": {
+          "Ref": "developmentVPC16"
+        },
+        "Tags": [
+          {
+            "Key": "Environment",
+            "Value": "development"
+          },
+          {
+            "Key": "CreatedBy",
+            "Value": "dmarkley"
+          },
+          {
+            "Key": "Tier",
+            "Value": "app"
+          },
+          {
+            "Key": "Name",
+            "Value": "16-app-uswest2a"
+          }
+        ]
+      }
+    },
+    "appuswest2aAssociation": {
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "main"
+        },
+        "SubnetId": {
+          "Ref": "appuswest2a"
+        }
+      }
+    },
+    "EC2SecurityGroupWeb": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Basic network access for Web instance",
+        "SecurityGroupIngress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "71.93.54.37/32"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "71.93.54.37/32"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443",
+            "CidrIp": "71.93.54.37/32"
+          }
+        ],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "22",
+            "ToPort": "22",
+            "CidrIp": "10.0.0.0/8"
+          },
+          {
+            "IpProtocol": "udp",
+            "FromPort": "53",
+            "ToPort": "53",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "VpcId": {
+          "Ref": "developmentVPC16"
+        }
+      }
+    },
+    "EC2SecurityGroupCM": {
+      "Type": "AWS::EC2::SecurityGroup",
+      "Properties": {
+        "GroupDescription": "Basic network access for CM instance",
+        "SecurityGroupIngress": [
+
+        ],
+        "SecurityGroupEgress": [
+          {
+            "IpProtocol": "udp",
+            "FromPort": "53",
+            "ToPort": "53",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "80",
+            "ToPort": "80",
+            "CidrIp": "0.0.0.0/0"
+          },
+          {
+            "IpProtocol": "tcp",
+            "FromPort": "443",
+            "ToPort": "443",
+            "CidrIp": "0.0.0.0/0"
+          }
+        ],
+        "VpcId": {
+          "Ref": "developmentVPC16"
+        }
+      }
+    },
+    "EC2SecurityGroupCMIngress22": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "EC2SecurityGroupCM"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": "22",
+        "ToPort": "22",
+        "SourceSecurityGroupId": {
+          "Ref": "EC2SecurityGroupWeb"
+        }
+      }
+    },
+    "EC2SecurityGroupCMIngress443": {
+      "Type": "AWS::EC2::SecurityGroupIngress",
+      "Properties": {
+        "GroupId": {
+          "Ref": "EC2SecurityGroupCM"
+        },
+        "IpProtocol": "tcp",
+        "FromPort": "443",
+        "ToPort": "443",
+        "SourceSecurityGroupId": {
+          "Ref": "EC2SecurityGroupWeb"
+        }
+      }
+    },
+    "InstanceCM": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "ami-d0f506b0",
+        "InstanceType": "t2.small",
+        "KeyName": "dmarkley-ssh",
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": false,
+            "DeviceIndex": "0",
+            "SubnetId": {
+              "Ref": "appuswest2a"
+            },
+            "GroupSet": [
+              {
+                "Ref": "EC2SecurityGroupCM"
+              }
+            ]
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash\n",
+                "\n",
+                "VERSION=\"12.6.0-1\"\n",
+                "curl -L \"https://packages.chef.io/stable/el/6/chef-server-core-$VERSION.el6.x86_64.rpm\" -o chef-install && rpm -Uvh chef-install\n",
+                "DKVERSION=\"0.14.25-1\"\n",
+                "curl -L \"https://packages.chef.io/stable/el/6/chefdk-$DKVERSION.el6.x86_64.rpm\" -o chef-dk-install && rpm -Uvh chef-dk-install\n",
+                "\n",
+                "mkdir /etc/chef\n",
+                "chef-server-ctl reconfigure\n",
+                "chef-server-ctl user-create drupal-demo-user Drupal Demo dextermarkley@gmail.com '",
+                "]Mi>ME9gJnfG+B4cUFjk",
+                "' --filename /etc/chef/drupaldemouser.pem\n",
+                "chef-server-ctl org-create drupal-demo-org 'Drupal Demo Org' --association_user drupal-demo-user --filename /etc/chef/validation.pem\n",
+                "cp /etc/chef/*.pem /home/ec2-user/\n",
+                "chown ec2-user /home/ec2-user/*.pem\n",
+                "cd ~/\n",
+                "yum install git -y\n",
+                "git clone https://github.com/",
+                "dextermarkley/drupal-automation-demo",
+                ".git\n",
+                "cd ~/drupal-automation-demo/chef/\n",
+                "mkdir -p ~/drupal-automation-demo/chef/.chef\n",
+                "hostname=$(curl 169.254.169.254/latest/meta-data/local-hostname)\n",
+                "\n",
+                "cat > ~/drupal-automation-demo/chef/.chef/knife.rb << EOF\n",
+                "current_dir = File.dirname(__FILE__)\n",
+                "log_level                :info\n",
+                "log_location             STDOUT\n",
+                "node_name                'drupal-demo-user'\n",
+                "client_key               \"/etc/chef/drupaldemouser.pem\"\n",
+                "validation_client_name   'rean-demo-org'\n",
+                "validation_key           \"/etc/chef/validation.pem\"\n",
+                "chef_server_url          'https://$hostname/organizations/drupal-demo-org'\n",
+                "cache_type               'BasicFile'\n",
+                "cache_options( :path => \"#{ENV['HOME']}/.chef/checksums\" )\n",
+                "cookbook_path            [\"#{current_dir}/../cookbooks\"]\n",
+                "EOF\n",
+                "\n",
+                "knife ssl fetch --server-url https://$hostname/organizations/drupal-demo-org\n",
+                "\n",
+                "chmod +x ~/drupal-automation-demo/chef/sync.sh\n",
+                "~/drupal-automation-demo/chef/sync.sh\n",
+                "\n",
+                "echo 'ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDq4uaMjMeNlXHEWimQx99oSJM6R5bpSb83nUhtMdp8d6ul8g7c5qA2I2FOYTjDryxj85NIeL9NWDd+9yAJ0FAIOyqqrWpo73eID0Cul0woVJxNBkg5DZS2RrrXAwQOTdfWv/FNujWYNyR+XU/QIAGVxsSNXEODqB9gBn/UUxwlNk13/xuI9AS+rScX71tW84Ld+Z4RpdKXaIQBGflWKSdoj/GAK4DKE3RSQrJ/Js8rSJyv6AXUlayQK1cvJ/Mez7BMAa2+d2S83sWv9ePX8jc6vWFMNKj9lsVrCZRqtTNc3UXOBlRJ2grWAahCZ1k/MhuG7RPd7Nm1vUa/wBtyt2VR drupa-automation-demo@chef' >> /home/ec2-user/.ssh/authorized_keys\n",
+                "echo ' ' >> /home/ec2-user/.ssh/authorized_keys\n",
+                "\n",
+                "# All is well so signal success\n",
+                "/opt/aws/bin/cfn-signal -e 0 -r \"Server setup complete\" '",
+                {
+                  "Ref": "WaitHandleCM"
+                },
+                "'\n"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "InstanceWeb": {
+      "Type": "AWS::EC2::Instance",
+      "Properties": {
+        "ImageId": "ami-d0f506b0",
+        "InstanceType": "t2.small",
+        "KeyName": "dmarkley-ssh",
+        "NetworkInterfaces": [
+          {
+            "AssociatePublicIpAddress": true,
+            "DeviceIndex": "0",
+            "SubnetId": {
+              "Ref": "pubuswest2a"
+            },
+            "GroupSet": [
+              {
+                "Ref": "EC2SecurityGroupWeb"
+              }
+            ]
+          }
+        ],
+        "UserData": {
+          "Fn::Base64": {
+            "Fn::Join": [
+              "",
+              [
+                "#!/bin/bash\n",
+                "\n",
+                "VERSION=\"12.9.41-1\"\n",
+                "curl -L \"https://packages.chef.io/stable/el/6/chef-$VERSION.el6.x86_64.rpm\" -o chef-install && rpm -Uvh chef-install\n",
+                "\n",
+                "mkdir -p /etc/chef\n",
+                "\n",
+                "INSTANCEID=$(curl 169.254.169.254/latest/meta-data/instance-id/)\n",
+                "\n",
+                "cat > /etc/chef/client.rb << EOF\n",
+                "ssl_verify_mode :verify_none\n",
+                "verify_api_cert false\n",
+                "log_level        :info\n",
+                "log_location     \"/var/log/chef-client.log\"\n",
+                "\n",
+                "chef_server_url  \"https://",
+                {
+                  "Fn::GetAtt": [
+                    "InstanceCM",
+                    "PrivateDnsName"
+                  ]
+                },
+                "/organizations/drupal-demo-org\"\n",
+                "environment \"",
+                {
+                  "Ref": "Environment"
+                },
+                "\"\n",
+                "node_name  \"",
+                {
+                  "Ref": "AWS::StackName"
+                },
+                "-$INSTANCEID\"\n",
+                "validation_client_name \"drupal-demo-user\"\n",
+                "file_backup_path   \"/var/chef/backup\"\n",
+                "file_cache_path    \"/var/chef/cache\"\n",
+                "pid_file           \"/var/chef/cache/client.pid\"\n",
+                "EOF\n",
+                "\n",
+                "cat > ~/.ssh/id_rsa << EOF\n",
+                "-----BEGIN RSA PRIVATE KEY-----\n",
+                "MIIEpAIBAAKCAQEA6uLmjIzHjZVxxFopkMffaEiTOkeW6Um/N51IbTHafHerpfIO\n",
+                "3OagNiNhTmE4w68sY/OTSHi/TVg3fvcgCdBQCDsqqq1qaO93iA9ArpdMKFScTQZI\n",
+                "OQ2Utka61wMEDk3X1r/xTbo1mDckfl1P0CABlcbEjVxDg6gfYAZ/1FMcJTZNd/8b\n",
+                "iPQEvq0nF+9bVvOC3fmeEaXSl2iEARn5ViknaI/xgCuAyhN0UkKyfybPK0icr+gF\n",
+                "1JWskCtXLyfzHs+wTAGtvndkvN7Fr/Xj1/I3Or1hTDSo/ZbFawmUarUzXN1FzgZU\n",
+                "SdoK1gGoQmdZPzIbhu0T3ezZtb1Gv8AbcrdlUQIDAQABAoIBAF8ZOsrQ/MJgLU2Y\n",
+                "S5fotJUePS2tanZNe3Pi5D4BnzohoYdwd4AMh/UjYfQ//KGNvOVC6vC+ooWIH//x\n",
+                "wjD2/FA41E+CIsEVo0mdE00cyKLTjuzIjFk9HGaoQGFpQS0hay/xSptztttICCh5\n",
+                "UyUqsDmZ3l51aohVe05/kyW9+Hk/uoroYiVoKkmFhd6ajyPQLagSi0j8jbe/65Ns\n",
+                "snmf6ZMrd1FMmxWDI+Aebeo2RNuLN64pWgo0QNNIFeyoottx0pJrDMkgs0OWXm69\n",
+                "289x5JtnnqTC8E5PQev63LepAvtju1X56Q/vpo+GitndhyTDU0fzpeCajvd8I6bC\n",
+                "AEAAv6ECgYEA+SBE/e9XhUQk0OExiAPxTqXbQhvHKh6Cnx4VaP33JpFDVrFUKBAV\n",
+                "YlPrgxZH+HelU8uUi4MiFtG2MfAEXmRCS/FOZsGV0xCHdLlafOwwNVbWEePV5XP+\n",
+                "WTz+35rrrcXeY8RbeYZ4x5nGTd9C+No3CHXkle2Lv8xFoUmjlOIhNHUCgYEA8V4M\n",
+                "Eym1+Lza0FFTxvOxZb/nECamzwXR98O8g3iR/ULElSCoLvgG5PusvkpSuFnVYncP\n",
+                "66rKBWUlnXQZ4TefVk3zBQhKPvyxcprVHG0BWwtmeGhzjfqitII0Efe7hqqhz7Wa\n",
+                "HWm+PsktsBieBy+uQbZBfnUhre5gjq719meD4e0CgYEAlzdDKW/yC+5E+pT2X70k\n",
+                "57w8zm/WAHbsinDURhqBvmNGIIUatAavNDQELFmF7geRzr8vt08tjfRVRxKNVE4+\n",
+                "/6HFGRJAQxExZ2RqzJEA4h+HaOyGlPRHWxtvCYMbsyr7xksVyzoYbe+lMvdly2+J\n",
+                "IBWPXoIF5bG0QiZUqLZpuVECgYEAj+6eUrsX2bl83qbwx35AtkVmm7oA1QlKeW5O\n",
+                "tzOqExXCto8f28pqChiOnXcitu5TEgGgC8/v4qG7eZZnbGdH7CZVmhWkeMUlaAsu\n",
+                "tGHIYit9MqZO6kagyfWu6VwKhrawAXXw7kNFgJllVlKHwg9L4cG2cpuUtuykxdFN\n",
+                "uV9nRM0CgYBqb0Iy0mc/by/lrq5k/Tlv+kDpnq7lvTB8rmO9jWcOckhTIY1rxEzg\n",
+                "9ySR0q4bhRentGe8I0FUJrhS6tcZnwFwowTjLhxdCi8keRJUt1BHtJHYRQRnIM05\n",
+                "k6sqaTwAdphe17CqKUtvUffmlL4dp9RFT4O82zyCkpB8w88EdkFz7Q==\n",
+                "-----END RSA PRIVATE KEY-----\n",
+                "EOF\n",
+                "\n",
+                "chmod 400 ~/.ssh/id_rsa\n",
+                "\n",
+                "ssh-keyscan ",
+                {
+                  "Fn::GetAtt": [
+                    "InstanceCM",
+                    "PrivateDnsName"
+                  ]
+                },
+                " >> /root/.ssh/known_hosts\n",
+                "\n",
+                "scp -i ~/.ssh/id_rsa ec2-user@",
+                {
+                  "Fn::GetAtt": [
+                    "InstanceCM",
+                    "PrivateDnsName"
+                  ]
+                },
+                ":/home/ec2-user/readmed.pem /etc/chef/validation.pem\n",
+                "while [ $? -ne 0 ]; do sleep 5 && scp -i ~/.ssh/id_rsa ec2-user@",
+                {
+                  "Fn::GetAtt": [
+                    "InstanceCM",
+                    "PrivateDnsName"
+                  ]
+                },
+                ":/home/ec2-user/drupaldemouser.pem /etc/chef/validation.pem; done\n",
+                "\n",
+                "# Ohai hint to detect as EC2 node in VPC (on first run as opposed to second)\n",
+                "mkdir -p /etc/chef/ohai/hints\n",
+                "touch /etc/chef/ohai/hints/ec2.json\n",
+                "\n",
+                "cat > /etc/chef/roles.json << EOF\n",
+                "{\n",
+                "  \"run_list\": [\"drupal-demo\"],\n",
+                "  \"cloud\": {\n",
+                "    \"allowed_ip\": \"",
+                "71.93.54.37/32",
+                "\",\n",
+                "    \"mysql_root_password\": \"",
+                "eLaqerws0KLLJELjdKKEIL",
+                "\",\n",
+                "    \"mysql_drupal_password\": \"",
+                "aQfRwEryeqradsfvvcQERR",
+                "\",\n",
+                "    \"drupal_admin_pass\": \"",
+                "letmeindrupal",
+                "\"\n",
+                "  }\n",
+                "}\n",
+                "EOF\n",
+                "\n",
+                "\n",
+                "# Chef firstrun\n",
+                "chef-client -j /etc/chef/roles.json 2>&1 || exit 1\n",
+                "\n",
+                "# All is well so signal success\n",
+                "/opt/aws/bin/cfn-signal -e 0 -r \"Server setup complete\" '",
+                {
+                  "Ref": "WaitHandleWeb"
+                },
+                "'"
+              ]
+            ]
+          }
+        }
+      }
+    },
+    "WaitHandleWeb": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle"
+    },
+    "WaitConditionWeb": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "InstanceWeb",
+      "Properties": {
+        "Count": 1,
+        "Handle": {
+          "Ref": "WaitHandleWeb"
+        },
+        "Timeout": "1500"
+      }
+    },
+    "WaitHandleCM": {
+      "Type": "AWS::CloudFormation::WaitConditionHandle"
+    },
+    "WaitConditionCM": {
+      "Type": "AWS::CloudFormation::WaitCondition",
+      "DependsOn": "InstanceCM",
+      "Properties": {
+        "Count": 1,
+        "Handle": {
+          "Ref": "WaitHandleCM"
+        },
+        "Timeout": "1500"
+      }
+    }
+  }
+}

@@ -6,7 +6,7 @@ Provides recipes for deploying a demo of drupal.
 Requirements
 ------------
 
-None at this time.
+All requirements are currently self contained in this repository.
 
 Attributes
 ----------

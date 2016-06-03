@@ -15,7 +15,6 @@ chef_gem 'mysql2' do
   action :install
 end
 
-# Configure the MySQL client.
 mysql_client 'default' do
   action :create
 end
@@ -42,8 +41,6 @@ mysql_database 'drupal' do
   action :create
 end
 
-# https://github.com/chef-cookbooks/mysql/issues/410
-
 mysql_database_user node['drupal-demo']['mysql_drupal_user'] do
   connection(
     :host     => '127.0.0.1',
@@ -53,6 +50,6 @@ mysql_database_user node['drupal-demo']['mysql_drupal_user'] do
   password      node['cloud']['mysql_drupal_password']
   database_name 'drupal'
   host          '127.0.0.1'
-  privileges    [:select, :update,:insert, :alter, :index, :drop, :delete, :create ] # permissions required by documentation
+  privileges    [:select, :update,:insert, :alter, :index, :drop, :delete, :create ] # permissions required by drupal documentation
   action        :grant
 end

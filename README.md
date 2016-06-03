@@ -6,17 +6,25 @@ This package will:
 Create an AWS VPC with required NAT Gateway, Internet Gateway, subnets, and routing tables
 Create two EC2 Instances running amazon linux: a Chef server, and a instance with Drupal/Mysql
 
-The package here starts with a setup script. This script will create an ssh, and an s3 bucket with all the cookbooks. Review required parameters before getting started.
+The Quick Way
+-------------
+
+Copy the generated cloudformation json template to launch your stack. This is great if you just want to test things out. If you need to do actual development on the stack you will need to use the slow way.
+
+The Slow Way
+----------
+
+Execute the scripts to build what you need.
+
+Start with the create_ssh_key script. This script will create an ssh key for you to be able to log into the instances. Review required parameters before getting started.
 
 After the setup script has been run you can choose to use the generated .json to launch the cloudformation template or execute the ruby script.
 
 Requirements
-------------
+----------
 
  You are required to have AWS credential installed on our machined as ENV variables or a credential file with abilities to create and edit:
  - VPCs (subnets, routing tables, etc)
- - S3 buckets
- - IAM role permissions
  - EC2 Instances
 
  You are also required to have a unix based machine with ruby 2.x installed with these gems
@@ -31,7 +39,6 @@ Attributes / Parameters
 
 SETUP SCRIPT PARAMETERS
 
-s3_bucket - The s3 bucket to be created and cookbooks uploaded to. This value must match Cloudformation Parameter - S3CookbookBucket
 ssh_key - The ssh key pair to create in AWS. This value must match Cloudformation Parameter - SSHKey
 ssh_key_store - When an ssh key pair is created it will be written to this location
 region - The AWS region to create the desired resources
@@ -53,21 +60,20 @@ SSHKey - The ssh key that will be used to log into the instances if necessary. N
 
 AvailabilityZone - For this demo only a single AZ is used, specify the one you want to use here: ie 'us-west-2a'
 
-S3CookbookBucket - This should be the s3 bucket that contains the cookbooks required for Chef. This will need to be configured with the setup script.
+GitRepo - This should be the git repo that contains all the cookbooks the stack is going to use.
 
-MysqlRootPassword - Do you really want to provision the root mysql password as a parameter? This is how you would do it if you did.
+MysqlRootPassword - Do you really want to provision the root mysql password as a cf parameter? This is how you would do it if you did.
 
 MysqlDrupalPassword - This is the password that will be created for the drupal database.
 
 DrupalAdminPass - This is the password that will be set for the drupal admin user.
 
-
+ChefPassword - The password you would use to log into the chef server if needed.
 
 Usage
 -----
-# First run the setup script to configure AWS resources
-1. ./setup.rb \
---s3_bucket dmarkley-drupal-demo \
+# First run the create_ssh_key.rb script to get your ssh key to log into the instance
+1. ./create_ssh_key.rb \
 --ssh_key dmarkley-ssh \
 --ssh_key_store ~/.ssh/dmarkley-ssh.pem \
 --region us-west-2 \
@@ -83,10 +89,13 @@ Usage
 --disable-rollback \
 --profile my_profile
 
-
 If all went well the stack will transition to "CREATION_COMPLETE".
 
 Navigate to ec2 and get the public IP of the web instance. Try to load it in your browser. Does it work?
+
+If you make developmental improvements create a new json by executing expand.
+
+./drupal-demo.rb expand > ../drupal-demo.json
 
 License and Authors
 -------------------
